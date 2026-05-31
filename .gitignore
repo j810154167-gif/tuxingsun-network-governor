@@ -1,0 +1,61 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / UI future
+node_modules/
+dist/
+build/
+.next/
+
+# Local runtime and sensitive artifacts
+backups/
+reports/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+cache.db
+Country.mmdb
+
+# Local planning and historical handoff notes not meant for public release
+KICKOFF.md
+诊断修复 Clash_VPN 网络共存问题.md
+github发布分布组合指令.md
+
+# Proxy subscriptions and secrets
+*subscription*
+*subscribe*
+*token*
+*secret*
+*password*
+*.key
+*.pem
+*.p12
+*.mobileconfig
+
+# Generated configs that may contain proxy credentials
+clash-verge.yaml
+verge.yaml
+config.yaml
+profiles/raw/
+configs/raw/
+configs/generated/

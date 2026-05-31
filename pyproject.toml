@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tuxingsun-network-governor"
+version = "0.1.0a0"
+description = "Tuxingsun Network Governor: VPN自主分流路由治理中枢"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Tuxingsun Network Governor contributors" }]
+keywords = ["clash", "mihomo", "clash-verge", "vpn", "routing", "macos", "governance"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Networking",
+]
+dependencies = ["PyYAML>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/{owner}/tuxingsun-network-governor"
+Issues = "https://github.com/{owner}/tuxingsun-network-governor/issues"
+
+[project.scripts]
+tuxs-vpn = "governor.cli:main"
+tuxs-vpn-watcher = "governor.watcher:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

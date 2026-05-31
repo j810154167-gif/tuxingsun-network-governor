@@ -1,0 +1,16 @@
+system_proxy: off
+tun: off
+ipv6: off
+fallback: direct
+local_lan: direct
+rfc1918: direct
+nas: direct
+docker: direct
+vpn_internal: direct
+company_internal: direct
+trae_relay: direct
+cn_sites: direct
+github: direct
+ai_official: direct
+brave: direct
+google_api: direct

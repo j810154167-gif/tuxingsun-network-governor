@@ -1,0 +1,30 @@
+domains:
+  - localhost
+suffixes:
+  - localhost
+  - local
+  - lan
+  - home
+  - internal
+  - intranet
+  - nas
+  - docker.internal
+  - trae.ai
+  - traeapi.us
+  - traecdn.ai
+  - mchost.guru
+  - bytedance.com
+  - byteintl.com
+  - byteintlapi.com
+  - doubao.com
+  - muskapi.cc
+  - chiyicn.com
+  - xi-xu.me
+  - aliyuncs.com
+  - alibabacloud.com
+  - aliyun.com
+  - baidu.com
+  - qq.com
+  - eastmoney.com
+keywords:
+  - nas
