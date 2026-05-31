@@ -9,7 +9,7 @@
 
 ## Current stage
 
-The project moved from chaotic local Clash/VPN troubleshooting into GitHub public-release hardening.
+The project moved from chaotic local Clash/VPN troubleshooting into GitHub public-release hardening. The human-side lifecycle prompt manual is now maintained at `docs/human-lifecycle-prompts.md` and should be treated as the operator-facing source of truth for the three standard lanes: starting archive, periodic operations, and incident repair.
 
 ## Core decisions
 

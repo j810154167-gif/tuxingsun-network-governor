@@ -76,6 +76,8 @@ tuxs-vpn steady --connectivity
 
 ## Lifecycle lanes
 
+The human-side full lifecycle prompt manual is available at [docs/human-lifecycle-prompts.md](file:///Users/fiona/VPN/docs/human-lifecycle-prompts.md). It captures the three standard operator prompts, the source-of-truth model, operational lessons, and known mistakes from the first field deployment.
+
 ### 1. Starting archive
 
 Use this when taking over a machine or profile for the first time.
