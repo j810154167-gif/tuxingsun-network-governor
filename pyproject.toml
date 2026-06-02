@@ -9,6 +9,7 @@ description = "Tuxingsun Network Governor: VPN自主分流路由治理中枢"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Tuxingsun Network Governor contributors" }]
 keywords = ["clash", "mihomo", "clash-verge", "vpn", "routing", "macos", "governance"]
 classifiers = [
@@ -22,13 +23,32 @@ classifiers = [
 ]
 dependencies = ["PyYAML>=6.0"]
 
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pytest>=8.0",
+]
+
 [project.urls]
-Homepage = "https://github.com/{owner}/tuxingsun-network-governor"
-Issues = "https://github.com/{owner}/tuxingsun-network-governor/issues"
+Homepage = "https://github.com/j810154167-gif/tuxingsun-network-governor"
+Issues = "https://github.com/j810154167-gif/tuxingsun-network-governor/issues"
+Changelog = "https://github.com/j810154167-gif/tuxingsun-network-governor/blob/main/CHANGELOG.md"
+Security = "https://github.com/j810154167-gif/tuxingsun-network-governor/security/policy"
 
 [project.scripts]
 tuxs-vpn = "governor.cli:main"
 tuxs-vpn-watcher = "governor.watcher:main"
+tuxs-vpn-release-guard = "scripts.release_guard:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools]
+py-modules = []
+
+[tool.setuptools.package-data]
+governor = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

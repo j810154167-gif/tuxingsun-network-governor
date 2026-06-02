@@ -44,10 +44,21 @@ Users must provide their own legal and authorized network environment.
 ```bash
 python3 -m venv .venv
 . .venv/bin/activate
+python3 -m pip install -U pip
 python3 -m pip install -e .
 tuxs-vpn --help
 tuxs-vpn status
 tuxs-vpn drift --profile ai-proxy
+```
+
+For local development and release checks:
+
+```bash
+python3 -m pip install -e ".[dev]"
+python3 -m compileall -q src tests
+python3 -m pytest
+python3 -m build
+python3 scripts/release_guard.py
 ```
 
 For local development without installation:
@@ -154,7 +165,7 @@ Do not commit:
 - Proxy node hostnames with credentials.
 - API keys, tokens, passwords, private keys, Authorization headers.
 
-The `.gitignore` is intentionally strict for local runtime artifacts.
+The `.gitignore` is intentionally strict for local runtime artifacts. Run `python3 scripts/release_guard.py` before publishing to check forbidden artifact paths and common sensitive fields.
 
 ## Project state
 

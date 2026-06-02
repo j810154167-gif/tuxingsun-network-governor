@@ -66,13 +66,13 @@ def verify_runtime_rules(keywords: list[str] | None = None) -> dict[str, Any]:
     return {"attempted": True, "ok": bool(found), "matched_count": len(found), "sample": found[:10]}
 
 
-def apply_profile(profile: str, target: str = "mihomo", reload_runtime: bool = True) -> dict[str, Any]:
+def apply_profile(profile: str, target: str = "mihomo", reload_runtime: bool = True, config_path: Path = CLASH_VERGE_CONFIG) -> dict[str, Any]:
     if target != "mihomo":
         raise ApplyError("apply currently supports target=mihomo only")
-    backup = create_backup(f"apply profile {profile}")
-    candidate = generate_candidate(profile, target=target)
-    CLASH_VERGE_CONFIG.write_text(dump_yaml(candidate), encoding="utf-8")
-    reload_result = reload_mihomo(CLASH_VERGE_CONFIG) if reload_runtime else {"attempted": False, "ok": True, "reason": "reload disabled"}
+    backup = create_backup(f"apply profile {profile}", files=[config_path])
+    candidate = generate_candidate(profile, target=target, source=config_path)
+    config_path.write_text(dump_yaml(candidate), encoding="utf-8")
+    reload_result = reload_mihomo(config_path) if reload_runtime else {"attempted": False, "ok": True, "reason": "reload disabled"}
     if reload_result["attempted"] and not reload_result["ok"]:
         rollback = restore_backup(Path(backup["backup_dir"]))
         raise ApplyError(json.dumps({"error": "reload failed after apply", "backup": backup, "rollback": rollback, "reload": reload_result}, ensure_ascii=False))

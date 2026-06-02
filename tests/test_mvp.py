@@ -5,10 +5,11 @@ from pathlib import Path
 from governor.apply import apply_profile, rollback
 from governor.clash_config import summarize_config
 from governor.drift import detect_drift
-from governor.generator import generate_candidate
+from governor.generator import generate_candidate, write_candidate
 from governor.governance import proxy_residue_check
 from governor.launchd import plist_payload
 from governor.profiles import list_profiles, load_profile
+from governor.release_guard import scan
 from governor.report import steady_report
 
 
@@ -34,8 +35,22 @@ def test_generate_candidate_is_sanitizable() -> None:
     assert all(proxy.get("type") in {"ss", "trojan", "http", "socks5"} for proxy in config.get("proxies", []))
 
 
-def test_apply_no_reload_creates_backup_and_rollback_restores() -> None:
-    result = apply_profile("clean-direct", reload_runtime=False)
+def test_regenerate_candidate_is_idempotent(tmp_path: Path) -> None:
+    output_dir = tmp_path / "generated"
+    first = write_candidate("ai-proxy", target="mihomo", output_dir=output_dir)
+    first_text = first.read_text(encoding="utf-8")
+    second = write_candidate("ai-proxy", target="mihomo", output_dir=output_dir)
+    second_text = second.read_text(encoding="utf-8")
+    assert first == second
+    assert first_text == second_text
+    assert "password" + ":" not in second_text.lower()
+    assert "uuid" + ":" not in second_text.lower()
+
+
+def test_apply_no_reload_creates_backup_and_rollback_restores(tmp_path: Path) -> None:
+    config_path = tmp_path / "clash-verge.yaml"
+    config_path.write_text("mode: rule\nproxies: []\nproxy-groups: []\nrules: []\n", encoding="utf-8")
+    result = apply_profile("clean-direct", reload_runtime=False, config_path=config_path)
     backup_dir = Path(result["backup"]["backup_dir"])
     assert backup_dir.exists()
     assert (backup_dir / "manifest.json").exists()
@@ -63,6 +78,10 @@ def test_launchd_payload_shape() -> None:
     assert payload["Label"] == "ai.tuxingsun.tuxs-vpn"
     assert "--no-reload" in payload["ProgramArguments"]
     assert payload["EnvironmentVariables"]["PYTHONPATH"].endswith("src")
+
+
+def test_release_guard_has_no_publication_blockers() -> None:
+    assert scan() == []
 
 
 def test_steady_report_shape() -> None:
