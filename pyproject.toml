@@ -38,7 +38,7 @@ Security = "https://github.com/j810154167-gif/tuxingsun-network-governor/securit
 [project.scripts]
 tuxs-vpn = "governor.cli:main"
 tuxs-vpn-watcher = "governor.watcher:main"
-tuxs-vpn-release-guard = "scripts.release_guard:main"
+tuxs-vpn-release-guard = "governor.release_guard:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

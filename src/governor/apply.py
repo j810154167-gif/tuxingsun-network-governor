@@ -76,7 +76,7 @@ def apply_profile(profile: str, target: str = "mihomo", reload_runtime: bool = T
     if reload_result["attempted"] and not reload_result["ok"]:
         rollback = restore_backup(Path(backup["backup_dir"]))
         raise ApplyError(json.dumps({"error": "reload failed after apply", "backup": backup, "rollback": rollback, "reload": reload_result}, ensure_ascii=False))
-    rules = verify_runtime_rules() if reload_result.get("ok") else {"attempted": False, "ok": False, "reason": "runtime not reloaded"}
+    rules = verify_runtime_rules() if reload_result.get("attempted") and reload_result.get("ok") else {"attempted": False, "ok": False, "reason": "runtime not reloaded"}
     return {"profile": profile, "target": target, "backup": backup, "reload": reload_result, "runtime_rules": rules}
 
 
