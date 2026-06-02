@@ -156,6 +156,90 @@ mixed-port 必须为 7897
 - 让 Agent 记住技术弯路、误解和产品反馈。
 - 形成可上线、可回滚、可验证、可维护的治理中枢。
 
+### 弯路 7：发布测试触碰真实 Clash Verge 运行态
+
+错误做法：
+
+```text
+clean install / pytest / build 阶段直接写入真实 clash-verge.yaml
+--no-reload 仍访问 mihomo runtime /rules
+```
+
+后果：
+
+- CI、sandbox、干净机器会因为 macOS 权限或缺少 Clash Verge 状态失败。
+- 发布门禁变成依赖本机运行态，不能代表开源项目可安装、可测试。
+- `--no-reload` 本应是离线安全路径，却仍可能卡在 mihomo socket。
+
+正确做法：
+
+```text
+发布测试必须使用临时配置文件 / tmp_path / 可注入路径
+--no-reload 只验证生成和备份回滚，不访问 runtime socket
+真实 Clash Verge 写入测试必须单独授权，失败时记录为本机权限阻塞
+```
+
+### 弯路 8：release guard 只做脚本，不进入包内测试
+
+错误做法：
+
+```text
+只有 scripts/release_guard.py，CI 单独跑一次，但 pytest 不覆盖
+```
+
+后果：
+
+- 发布安全检查逻辑难以被单元测试覆盖。
+- CLI entry point 无法直接指向稳定模块。
+- 后续修改可能让 forbidden paths / 敏感字段检查静默退化。
+
+正确做法：
+
+```text
+把 release guard 放入 src/governor/release_guard.py
+scripts/release_guard.py 只作为薄入口
+pytest 中加入 scan() == [] 发布门禁测试
+pyproject 增加 tuxs-vpn-release-guard CLI entry point
+```
+
+### 弯路 9：远端 push 网络失败后误判为权限或代码问题
+
+本轮 GitHub push 曾出现：
+
+```text
+Recv failure: Operation timed out
+Error in the HTTP2 framing layer
+```
+
+正确处理：
+
+```text
+先确认本地 commit 和 ahead 状态
+不要重复盲目 push
+如需改 Git 行为，必须请求人类授权
+优先使用单次命令配置：git -c http.version=HTTP/1.1 push
+不要修改全局 git config
+```
+
+### 弯路 10：远端同步后未重新复验
+
+错误做法：
+
+```text
+push 成功后直接宣布发布硬化完成
+```
+
+正确做法：
+
+```text
+push 后必须重新确认：
+- git status --short 为空
+- HEAD 与 origin/main 指向同一提交
+- pytest 通过
+- release_guard passed
+必要时重新 build
+```
+
 ## 三、三类标准化提示词架构
 
 以下提示词是人类一侧的标准入口。每次使用时，复制对应段落给 Agent 即可。
@@ -483,12 +567,29 @@ Tuxs VPN 故障检修结果：
 要求：
 1. 先完成本地真源锁链重构，隔离混沌历史文档。
 2. 确认 README / CHANGELOG / ROADMAP / SECURITY / CONTRIBUTING / SESSION_HANDOFF / USAGE_LOG_TEMPLATE 已同步当前真实状态。
-3. 运行 release_guard，确保 backups/reports/generated configs/token/secret 不会发布。
-4. 执行 compileall、测试、build、clean install、CLI smoke。
-5. git add 前必须 dry-run，确认没有本地敏感产物。
-6. commit/tag/push/release 等权限动作必须获得人类授权。
-7. 发布后验证远端 main、tag、Release、assets。
-8. 如果人类在对话中泄露 token，提醒立即 revoke。
+3. 确认 pyproject.toml 包含 dependencies、dev dependencies、CLI entry points、真实 GitHub metadata、license-files。
+4. release guard 必须同时满足两条路径：
+   - 包内模块可测试：src/governor/release_guard.py
+   - 脚本入口可运行：scripts/release_guard.py
+5. 运行 release_guard，确保 backups/reports/generated configs/token/secret 不会发布。
+6. 执行 clean install、compileall、pytest、build、CLI smoke。
+7. 发布测试不得依赖真实 Clash Verge 运行态：
+   - 单元测试用 tmp_path / 临时配置文件
+   - `--no-reload` 不应访问 mihomo socket
+   - 真实 Clash Verge 写入必须单独向人类授权
+8. git add 前必须 dry-run / status / diff，确认没有本地敏感产物。
+9. commit/tag/push/release 等权限动作必须获得人类授权。
+10. 如果 push 遇到 HTTP2 framing / timeout：
+    - 先确认本地 ahead 状态
+    - 不要改全局 git config
+    - 需要人类授权后才可用 `git -c http.version=HTTP/1.1 push` 单次重试
+11. 发布后验证远端 main、tag、Release、assets。
+12. push 后必须重新确认：
+    - git status --short 为空
+    - HEAD 与 origin/main 同步
+    - pytest 通过
+    - release_guard passed
+13. 如果人类在对话中泄露 token，提醒立即 revoke。
 ```
 
 ## 五、Agent 必须记住的人类意图
