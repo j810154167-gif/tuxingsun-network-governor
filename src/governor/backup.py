@@ -13,16 +13,16 @@ from .utils import to_jsonable
 MANIFEST_NAME = "manifest.json"
 
 
-def _backup_root() -> Path:
-    BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
-    path = BACKUPS_DIR / datetime.now().strftime("%Y%m%d-%H%M%S")
+def _backup_root(backups_dir: Path = BACKUPS_DIR) -> Path:
+    backups_dir.mkdir(parents=True, exist_ok=True)
+    path = backups_dir / datetime.now().strftime("%Y%m%d-%H%M%S")
     path.mkdir(parents=True, exist_ok=False)
     return path
 
 
-def create_backup(reason: str, files: list[Path] | None = None) -> dict[str, Any]:
+def create_backup(reason: str, files: list[Path] | None = None, backups_dir: Path = BACKUPS_DIR) -> dict[str, Any]:
     selected = files or [CLASH_VERGE_CONFIG, CLASH_VERGE_STATE]
-    root = _backup_root()
+    root = _backup_root(backups_dir)
     copied = []
     for source in selected:
         entry = {"source": str(source), "exists": source.exists(), "backup": None}

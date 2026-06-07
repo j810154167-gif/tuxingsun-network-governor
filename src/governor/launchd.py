@@ -47,12 +47,11 @@ def write_plist(profile: str = "ai-proxy", interval: int = 10, recover: bool = F
 def unload_conflicting_agents() -> list[dict[str, Any]]:
     results = []
     for label, path in zip(CONFLICTING_LAUNCHD_LABELS, CONFLICTING_LAUNCHD_PLISTS):
-        if path.exists():
-            unload = run_command(["launchctl", "unload", str(path)])
-            path.unlink(missing_ok=True)
-        else:
-            unload = {"ok": True, "stdout": "plist missing", "stderr": ""}
-        results.append({"label": label, "plist": str(path), "plist_exists": path.exists(), "unload": unload})
+        active = run_command(["sh", "-c", f"launchctl list | grep {label} || true"])
+        unload = run_command(["launchctl", "unload", str(path)]) if path.exists() else {"ok": True, "stdout": "plist missing", "stderr": ""}
+        remove = run_command(["launchctl", "remove", label]) if active.get("stdout") else {"ok": True, "stdout": "not loaded", "stderr": ""}
+        path.unlink(missing_ok=True)
+        results.append({"label": label, "plist": str(path), "plist_exists": path.exists(), "active_before": active, "unload": unload, "remove": remove})
     return results
 
 

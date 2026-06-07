@@ -50,8 +50,9 @@ def test_regenerate_candidate_is_idempotent(tmp_path: Path) -> None:
 
 def test_apply_no_reload_creates_backup_and_rollback_restores(tmp_path: Path) -> None:
     config_path = tmp_path / "clash-verge.yaml"
+    backups_dir = tmp_path / "backups"
     config_path.write_text("mode: rule\nproxies: []\nproxy-groups: []\nrules: []\n", encoding="utf-8")
-    result = apply_profile("clean-direct", reload_runtime=False, config_path=config_path)
+    result = apply_profile("clean-direct", reload_runtime=False, config_path=config_path, backups_dir=backups_dir)
     backup_dir = Path(result["backup"]["backup_dir"])
     assert backup_dir.exists()
     assert (backup_dir / "manifest.json").exists()
