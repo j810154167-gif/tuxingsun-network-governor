@@ -89,8 +89,15 @@ def test_watcher_run_once_reports_recovery_result() -> None:
 def test_launchd_payload_shape() -> None:
     payload = plist_payload(profile="ai-proxy", interval=30, recover=True, reload_runtime=False)
     assert payload["Label"] == "ai.tuxingsun.tuxs-vpn"
+    assert "--recover" in payload["ProgramArguments"]
     assert "--no-reload" in payload["ProgramArguments"]
     assert payload["EnvironmentVariables"]["PYTHONPATH"].endswith("src")
+
+
+def test_launchd_default_is_observe_only() -> None:
+    payload = plist_payload(profile="ai-proxy", interval=30)
+    assert "--recover" not in payload["ProgramArguments"]
+    assert payload["KeepAlive"] is False
 
 
 def test_release_guard_has_no_publication_blockers() -> None:

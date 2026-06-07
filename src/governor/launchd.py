@@ -9,7 +9,7 @@ from .paths import GOVERNOR_LAUNCHD_LABEL, GOVERNOR_LAUNCHD_PLIST, LAUNCH_AGENTS
 from .utils import run_command
 
 
-def plist_payload(profile: str = "ai-proxy", interval: int = 10, recover: bool = True, reload_runtime: bool = True) -> dict[str, Any]:
+def plist_payload(profile: str = "ai-proxy", interval: int = 10, recover: bool = False, reload_runtime: bool = True) -> dict[str, Any]:
     args = [sys.executable, "-m", "governor.watcher", "--profile", profile, "--interval", str(interval)]
     if recover:
         args.append("--recover")
@@ -21,13 +21,13 @@ def plist_payload(profile: str = "ai-proxy", interval: int = 10, recover: bool =
         "WorkingDirectory": str(PROJECT_ROOT),
         "EnvironmentVariables": {"PYTHONPATH": str(PROJECT_ROOT / "src")},
         "RunAtLoad": True,
-        "KeepAlive": True,
+        "KeepAlive": False,
         "StandardOutPath": str(REPORTS_DIR / "tuxs-vpn-watcher.out.log"),
         "StandardErrorPath": str(REPORTS_DIR / "tuxs-vpn-watcher.err.log"),
     }
 
 
-def write_plist(profile: str = "ai-proxy", interval: int = 10, recover: bool = True, reload_runtime: bool = True, path: Path = GOVERNOR_LAUNCHD_PLIST) -> Path:
+def write_plist(profile: str = "ai-proxy", interval: int = 10, recover: bool = False, reload_runtime: bool = True, path: Path = GOVERNOR_LAUNCHD_PLIST) -> Path:
     LAUNCH_AGENTS_DIR.mkdir(parents=True, exist_ok=True)
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     payload = plist_payload(profile=profile, interval=interval, recover=recover, reload_runtime=reload_runtime)
@@ -36,7 +36,7 @@ def write_plist(profile: str = "ai-proxy", interval: int = 10, recover: bool = T
     return path
 
 
-def install(profile: str = "ai-proxy", interval: int = 10, recover: bool = True, reload_runtime: bool = True) -> dict[str, Any]:
+def install(profile: str = "ai-proxy", interval: int = 10, recover: bool = False, reload_runtime: bool = True) -> dict[str, Any]:
     path = write_plist(profile=profile, interval=interval, recover=recover, reload_runtime=reload_runtime)
     unload = run_command(["launchctl", "unload", str(path)])
     load = run_command(["launchctl", "load", str(path)])

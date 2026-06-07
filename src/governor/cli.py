@@ -107,10 +107,10 @@ def cmd_recover(args: argparse.Namespace) -> int:
 
 def cmd_launchd(args: argparse.Namespace) -> int:
     if args.action == "write":
-        path = write_plist(profile=args.profile, interval=args.interval, recover=not args.no_recover, reload_runtime=not args.no_reload)
+        path = write_plist(profile=args.profile, interval=args.interval, recover=args.recover, reload_runtime=not args.no_reload)
         print_json({"plist": str(path)})
     elif args.action == "install":
-        print_json(launchd_install(profile=args.profile, interval=args.interval, recover=not args.no_recover, reload_runtime=not args.no_reload))
+        print_json(launchd_install(profile=args.profile, interval=args.interval, recover=args.recover, reload_runtime=not args.no_reload))
     elif args.action == "uninstall":
         print_json(launchd_uninstall())
     else:
@@ -184,7 +184,7 @@ def build_parser() -> argparse.ArgumentParser:
     launchd.add_argument("action", choices=["write", "install", "uninstall", "status"])
     launchd.add_argument("--profile", default="ai-proxy")
     launchd.add_argument("--interval", type=int, default=10)
-    launchd.add_argument("--no-recover", action="store_true")
+    launchd.add_argument("--recover", action="store_true")
     launchd.add_argument("--no-reload", action="store_true")
     launchd.set_defaults(func=cmd_launchd)
 
