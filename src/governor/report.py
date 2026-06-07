@@ -16,10 +16,10 @@ from .utils import to_jsonable
 
 
 RISK_ITEMS = [
-    {"risk": "mihomo 未启动时无法验证运行时 /rules 与节点 delay", "mitigation": "启动 Clash Verge 后运行 Tuxs VPN test 和 apply"},
-    {"risk": "Clash Verge GUI 可能重写 clash-verge.yaml 或 verge.yaml", "mitigation": "启用 launchd watcher 执行 drift recover"},
+    {"risk": "mihomo 未启动时无法验证运行时 /rules 与节点 delay", "mitigation": "启动 Clash Verge 后运行 Tuxs VPN test；写入修复必须单独授权"},
+    {"risk": "Clash Verge GUI 可能重写 clash-verge.yaml 或 verge.yaml", "mitigation": "watcher 默认只观测漂移；修复真源链后再授权 apply"},
     {"risk": "生成配置可能包含订阅节点字段", "mitigation": "configs/generated 已被 .gitignore 排除，报告只写摘要"},
-    {"risk": "系统代理被其他 GUI 打开后指向本地死端口", "mitigation": "guard-proxy 检测，watcher 可恢复 profile"},
+    {"risk": "系统代理被其他 GUI 打开后指向本地死端口", "mitigation": "guard-proxy 只读检测；修复系统代理必须单独授权"},
     {"risk": "ClashX 仅兼容 ss/trojan 等部分节点", "mitigation": "ClashX 作为备用层，不作为 mihomo 完整替代"},
 ]
 

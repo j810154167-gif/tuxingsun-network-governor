@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import socket
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -86,10 +87,18 @@ def rollback(backup_dir: Path | None = None, reload_runtime: bool = True) -> dic
     return {"restore": restored, "reload": reload_result}
 
 
-def write_operation_report(name: str, data: dict[str, Any], reports_dir: Path) -> Path:
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    from datetime import datetime
+def _prune_timestamp_reports(reports_dir: Path, name: str, retain_last: int) -> None:
+    if retain_last <= 0 or not reports_dir.exists():
+        return
+    candidates = sorted(reports_dir.glob(f"*-{name}.json"))
+    for path in candidates[:-retain_last]:
+        if path.is_file():
+            path.unlink()
 
-    path = reports_dir / f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{name}.json"
+
+def write_operation_report(name: str, data: dict[str, Any], reports_dir: Path, retain_last: int = 200) -> Path:
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    path = reports_dir / f"{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}-{name}.json"
     path.write_text(json.dumps(to_jsonable(data), ensure_ascii=False, indent=2), encoding="utf-8")
+    _prune_timestamp_reports(reports_dir, name, retain_last)
     return path

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from governor.apply import apply_profile, rollback
+from governor.apply import apply_profile, rollback, write_operation_report
 from governor.clash_config import summarize_config
 from governor.drift import detect_drift
 from governor.generator import generate_candidate, write_candidate
@@ -11,7 +11,7 @@ from governor.launchd import plist_payload, status
 from governor.profiles import list_profiles, load_profile
 from governor.release_guard import scan
 from governor.report import steady_report
-from governor.watcher import run_once, watch
+from governor.watcher import run_once, watch, write_watcher_snapshot
 
 
 def test_profiles_load() -> None:
@@ -85,6 +85,24 @@ def test_ai_proxy_candidate_satisfies_custom_rule_drift() -> None:
 def test_watcher_run_once_reports_recovery_result() -> None:
     result = run_once(profile="ai-proxy", recover=False, reload_runtime=False)
     assert "ok" in result
+
+
+def test_watcher_snapshot_only_writes_event_on_state_change(tmp_path: Path) -> None:
+    first = write_watcher_snapshot({"ok": False, "missing_custom_rule_count": 2}, tmp_path)
+    second = write_watcher_snapshot({"ok": False, "missing_custom_rule_count": 2}, tmp_path)
+    third = write_watcher_snapshot({"ok": True, "missing_custom_rule_count": 0}, tmp_path)
+    assert first["event"] is not None
+    assert second["event"] is None
+    assert third["event"] is not None
+    assert (tmp_path / "watcher-latest.json").exists()
+    assert len(list(tmp_path.glob("*-watcher-event.json"))) == 2
+    assert not list(tmp_path.glob("*-watcher.json"))
+
+
+def test_operation_report_prunes_old_timestamp_reports(tmp_path: Path) -> None:
+    for index in range(5):
+        write_operation_report("test", {"index": index}, tmp_path, retain_last=2)
+    assert len(list(tmp_path.glob("*-test.json"))) == 2
 
 
 def test_launchd_payload_shape() -> None:
