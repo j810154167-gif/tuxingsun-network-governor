@@ -5,7 +5,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .paths import GOVERNOR_LAUNCHD_LABEL, GOVERNOR_LAUNCHD_PLIST, LAUNCH_AGENTS_DIR, PROJECT_ROOT, REPORTS_DIR
+from .paths import (
+    CONFLICTING_LAUNCHD_LABELS,
+    CONFLICTING_LAUNCHD_PLISTS,
+    GOVERNOR_LAUNCHD_LABEL,
+    GOVERNOR_LAUNCHD_PLIST,
+    LAUNCH_AGENTS_DIR,
+    PROJECT_ROOT,
+    REPORTS_DIR,
+)
 from .utils import run_command
 
 
@@ -36,18 +44,36 @@ def write_plist(profile: str = "ai-proxy", interval: int = 10, recover: bool = F
     return path
 
 
+def unload_conflicting_agents() -> list[dict[str, Any]]:
+    results = []
+    for label, path in zip(CONFLICTING_LAUNCHD_LABELS, CONFLICTING_LAUNCHD_PLISTS):
+        if path.exists():
+            unload = run_command(["launchctl", "unload", str(path)])
+            path.unlink(missing_ok=True)
+        else:
+            unload = {"ok": True, "stdout": "plist missing", "stderr": ""}
+        results.append({"label": label, "plist": str(path), "plist_exists": path.exists(), "unload": unload})
+    return results
+
+
 def install(profile: str = "ai-proxy", interval: int = 10, recover: bool = False, reload_runtime: bool = True) -> dict[str, Any]:
+    conflicts = unload_conflicting_agents()
     path = write_plist(profile=profile, interval=interval, recover=recover, reload_runtime=reload_runtime)
     unload = run_command(["launchctl", "unload", str(path)])
     load = run_command(["launchctl", "load", str(path)])
-    return {"plist": str(path), "unload": unload, "load": load, "status": status()}
+    return {"plist": str(path), "conflicts": conflicts, "unload": unload, "load": load, "status": status()}
 
 
 def uninstall(path: Path = GOVERNOR_LAUNCHD_PLIST) -> dict[str, Any]:
     unload = run_command(["launchctl", "unload", str(path)]) if path.exists() else {"ok": True, "stdout": "plist missing", "stderr": ""}
-    return {"plist": str(path), "unload": unload, "status": status()}
+    conflicts = unload_conflicting_agents()
+    return {"plist": str(path), "unload": unload, "conflicts": conflicts, "status": status()}
 
 
 def status() -> dict[str, Any]:
-    result = run_command(["sh", "-c", f"launchctl list | grep {GOVERNOR_LAUNCHD_LABEL} || true"])
-    return {"label": GOVERNOR_LAUNCHD_LABEL, "plist": str(GOVERNOR_LAUNCHD_PLIST), "plist_exists": GOVERNOR_LAUNCHD_PLIST.exists(), "launchctl": result}
+    active = run_command(["sh", "-c", f"launchctl list | grep {GOVERNOR_LAUNCHD_LABEL} || true"])
+    conflicts = []
+    for label, path in zip(CONFLICTING_LAUNCHD_LABELS, CONFLICTING_LAUNCHD_PLISTS):
+        active_conflict = run_command(["sh", "-c", f"launchctl list | grep {label} || true"])
+        conflicts.append({"label": label, "plist": str(path), "plist_exists": path.exists(), "launchctl": active_conflict})
+    return {"label": GOVERNOR_LAUNCHD_LABEL, "plist": str(GOVERNOR_LAUNCHD_PLIST), "plist_exists": GOVERNOR_LAUNCHD_PLIST.exists(), "launchctl": active, "conflicts": conflicts}

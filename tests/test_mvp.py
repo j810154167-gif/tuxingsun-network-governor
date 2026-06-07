@@ -7,11 +7,11 @@ from governor.clash_config import summarize_config
 from governor.drift import detect_drift
 from governor.generator import generate_candidate, write_candidate
 from governor.governance import proxy_residue_check
-from governor.launchd import plist_payload
+from governor.launchd import plist_payload, status
 from governor.profiles import list_profiles, load_profile
 from governor.release_guard import scan
 from governor.report import steady_report
-from governor.watcher import run_once
+from governor.watcher import run_once, watch
 
 
 def test_profiles_load() -> None:
@@ -98,6 +98,15 @@ def test_launchd_default_is_observe_only() -> None:
     payload = plist_payload(profile="ai-proxy", interval=30)
     assert "--recover" not in payload["ProgramArguments"]
     assert payload["KeepAlive"] is False
+
+
+def test_launchd_status_reports_legacy_conflicts() -> None:
+    result = status()
+    assert any(item["label"] == "ai.openclaw.network-governor" for item in result["conflicts"])
+
+
+def test_watcher_default_is_observe_only() -> None:
+    assert watch.__defaults__[2] is False
 
 
 def test_release_guard_has_no_publication_blockers() -> None:

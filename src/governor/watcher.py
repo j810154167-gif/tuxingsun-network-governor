@@ -18,7 +18,7 @@ def run_once(profile: str = "ai-proxy", recover: bool = False, reload_runtime: b
     return detect_drift(profile)
 
 
-def watch(profile: str = "ai-proxy", interval: int = 10, recover: bool = True, reload_runtime: bool = True) -> None:
+def watch(profile: str = "ai-proxy", interval: int = 10, recover: bool = False, reload_runtime: bool = True) -> None:
     consecutive_incomplete_recoveries = 0
     while True:
         data = run_once(profile=profile, recover=recover, reload_runtime=reload_runtime)
