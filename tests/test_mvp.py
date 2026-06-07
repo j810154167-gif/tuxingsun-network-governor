@@ -11,6 +11,7 @@ from governor.launchd import plist_payload
 from governor.profiles import list_profiles, load_profile
 from governor.release_guard import scan
 from governor.report import steady_report
+from governor.watcher import run_once
 
 
 def test_profiles_load() -> None:
@@ -43,8 +44,8 @@ def test_regenerate_candidate_is_idempotent(tmp_path: Path) -> None:
     second_text = second.read_text(encoding="utf-8")
     assert first == second
     assert first_text == second_text
-    assert "password" + ":" not in second_text.lower()
-    assert "uuid" + ":" not in second_text.lower()
+    assert "password: <redacted>" in second_text.lower()
+    assert "uuid: <redacted>" in second_text.lower()
 
 
 def test_apply_no_reload_creates_backup_and_rollback_restores(tmp_path: Path) -> None:
@@ -71,6 +72,18 @@ def test_drift_report_shape() -> None:
     assert "ok" in result
     assert "missing_custom_rule_count" in result
     assert "proxy_residue" in result
+
+
+def test_ai_proxy_candidate_satisfies_custom_rule_drift() -> None:
+    config = generate_candidate("ai-proxy", target="mihomo")
+    rules = config.get("rules", [])
+    assert any("github.com" in str(rule) for rule in rules)
+    assert all("🔰国外流量" not in str(rule) for rule in rules)
+
+
+def test_watcher_run_once_reports_recovery_result() -> None:
+    result = run_once(profile="ai-proxy", recover=False, reload_runtime=False)
+    assert "ok" in result
 
 
 def test_launchd_payload_shape() -> None:

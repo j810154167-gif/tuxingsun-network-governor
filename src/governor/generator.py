@@ -37,6 +37,12 @@ def _rewrite_profile_rules(rules: list[str], profile: Profile, proxy_group: str)
     return rewritten
 
 
+def expected_custom_rules(profile_name: str, config: dict[str, Any]) -> list[str]:
+    profile = load_profile(profile_name)
+    proxy_group = _proxy_group_name(config)
+    return _rewrite_profile_rules(load_custom_rules_from_injector(), profile, proxy_group)
+
+
 def _filter_clashx(config: dict[str, Any]) -> dict[str, Any]:
     output = deepcopy(config)
     proxies = [p for p in output.get("proxies", []) or [] if isinstance(p, dict) and str(p.get("type")) in CLASHX_COMPATIBLE_TYPES]
@@ -63,10 +69,9 @@ def generate_candidate(profile_name: str, target: str = "mihomo", source: Path =
     tun = output.get("tun") if isinstance(output.get("tun"), dict) else {}
     tun["enable"] = profile.tun == "on"
     output["tun"] = tun
-    custom_rules = load_custom_rules_from_injector()
+    custom_rules = expected_custom_rules(profile_name, output)
     existing_rules = [rule for rule in output.get("rules", []) or [] if rule not in custom_rules]
-    proxy_group = _proxy_group_name(output)
-    output["rules"] = _rewrite_profile_rules(custom_rules, profile, proxy_group) + existing_rules
+    output["rules"] = custom_rules + existing_rules
     if target == "clashx":
         output = _filter_clashx(output)
     return output

@@ -19,9 +19,16 @@ def run_once(profile: str = "ai-proxy", recover: bool = False, reload_runtime: b
 
 
 def watch(profile: str = "ai-proxy", interval: int = 10, recover: bool = True, reload_runtime: bool = True) -> None:
+    consecutive_incomplete_recoveries = 0
     while True:
         data = run_once(profile=profile, recover=recover, reload_runtime=reload_runtime)
         write_operation_report("watcher", data, REPORTS_DIR)
+        if recover and data.get("recovery_incomplete"):
+            consecutive_incomplete_recoveries += 1
+            if consecutive_incomplete_recoveries >= 1:
+                break
+        else:
+            consecutive_incomplete_recoveries = 0
         time.sleep(interval)
 
 

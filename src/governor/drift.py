@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 from .apply import apply_profile
-from .clash_config import load_custom_rules_from_injector, load_yaml
+from .clash_config import load_yaml
+from .generator import expected_custom_rules
 from .governance import proxy_residue_check
 from .paths import CLASH_VERGE_CONFIG, CLASH_VERGE_STATE
 
@@ -27,7 +28,7 @@ def _rule_present(rules: list[Any], expected: str) -> bool:
 def detect_drift(profile: str = "ai-proxy") -> dict[str, Any]:
     config = load_yaml(CLASH_VERGE_CONFIG)
     verge = load_yaml(CLASH_VERGE_STATE)
-    custom_rules = load_custom_rules_from_injector()
+    custom_rules = expected_custom_rules(profile, config)
     rules = config.get("rules", []) or []
     missing_rules = [rule for rule in custom_rules if not _rule_present(rules, rule)]
     setting_drifts = []
@@ -60,4 +61,8 @@ def recover_drift(profile: str = "ai-proxy", reload_runtime: bool = True) -> dic
         return {"changed": False, "before": before, "after": before}
     apply_result = apply_profile(profile, reload_runtime=reload_runtime)
     after = detect_drift(profile)
-    return {"changed": True, "before": before, "apply": apply_result, "after": after}
+    result = {"changed": True, "before": before, "apply": apply_result, "after": after}
+    if not after["ok"]:
+        result["recovery_incomplete"] = True
+        result["recommendation"] = "stop automatic recovery and inspect true source chain"
+    return result
